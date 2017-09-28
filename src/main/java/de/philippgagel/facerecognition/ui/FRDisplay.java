@@ -28,13 +28,14 @@ public class FRDisplay extends JPanel{
     
     @Override
     public void paintComponent(Graphics g) {
-        super.paintComponent(g); //To change body of generated methods, choose Tools | Templates.
+        super.paintComponent(g);
         
         if(image != null) g.drawImage(this.image, 0, 0, this.getWidth(), this.getHeight(), null);
         
+        char[] fps = Integer.toString(calcFPS()).toCharArray();
         g.setColor(Color.red);
         g.setFont(new Font("Times New Roman", Font.BOLD, 12));
-        g.drawString(Integer.toString(calcFPS()), 0, 0);
+        g.drawChars(fps, 0, fps.length, 10, 10);
     }
     
     private int calcFPS(){
