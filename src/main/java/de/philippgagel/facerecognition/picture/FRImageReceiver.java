@@ -1,9 +1,9 @@
 
 package de.philippgagel.facerecognition.picture;
 
-import java.io.File;
-import java.util.LinkedList;
-import java.util.List;
+import com.github.sarxos.webcam.Webcam;
+import java.awt.Dimension;
+import java.awt.image.BufferedImage;
 import java.util.logging.Logger;
 
 /**
@@ -13,23 +13,16 @@ import java.util.logging.Logger;
 public class FRImageReceiver {
     private static final Logger LOG = Logger.getLogger(FRImageReceiver.class.getName());
     
-    private String path;
-    private List<File> images;
+    private Webcam webcam;
     
-    public FRImageReceiver(String path){
-        this.path = path;
-        this.images = new LinkedList<>();
+    public FRImageReceiver(Dimension size){
+        webcam = Webcam.getDefault();
+        webcam.open();
+        webcam.setCustomViewSizes(new Dimension[] {size});
+        LOG.info("Image Receiver initialized");
     }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    public List<File> getImages() {
-        return images;
+    
+    public BufferedImage getImage(){
+        return webcam.getImage();
     }
 }
