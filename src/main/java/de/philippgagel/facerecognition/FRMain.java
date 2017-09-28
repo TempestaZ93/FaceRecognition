@@ -1,7 +1,7 @@
 
 package de.philippgagel.facerecognition;
 
-import de.philippgagel.facerecognition.picture.FRImageReceiver;
+import de.philippgagel.facerecognition.camerahandling.FRImageReceiver;
 import de.philippgagel.facerecognition.ui.FRFrame;
 import de.philippgagel.facerecognition.ui.listeners.FRInputListener;
 import java.awt.Dimension;
@@ -12,7 +12,7 @@ import java.awt.Dimension;
  */
 public class FRMain {
     public static void main(String[] args){
-        Dimension size = new Dimension(800, 600);
+        Dimension size = new Dimension(640, 480);
         String title = "Webcam-Test";
         
         FRImageReceiver receiver = new FRImageReceiver(size);
