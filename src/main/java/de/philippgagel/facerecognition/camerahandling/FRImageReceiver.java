@@ -14,6 +14,7 @@ public class FRImageReceiver {
     private static final Logger LOG = Logger.getLogger(FRImageReceiver.class.getName());
     
     private Webcam webcam;
+    private BufferedImage currentImage;
     
     public FRImageReceiver(Dimension size){
         webcam = Webcam.getDefault();
@@ -23,6 +24,9 @@ public class FRImageReceiver {
     }
     
     public BufferedImage getImage(){
-        return webcam.getImage();
+        if(webcam.isImageNew()){
+            return (currentImage = webcam.getImage());
+        }
+        return currentImage;
     }
 }
