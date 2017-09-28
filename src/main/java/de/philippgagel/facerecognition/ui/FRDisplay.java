@@ -2,6 +2,7 @@
 package de.philippgagel.facerecognition.ui;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
@@ -20,8 +21,9 @@ public class FRDisplay extends JPanel{
     private int fpsCounter;
     private long fpsTimeMark;
     
-    public FRDisplay(){
+    public FRDisplay(Dimension size){
         fpsTimeMark = new Date().getTime();
+        super.setPreferredSize(size);
     }    
     
     @Override
