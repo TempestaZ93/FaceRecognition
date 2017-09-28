@@ -10,9 +10,11 @@ import java.awt.image.BufferedImage;
  */
 public class FRManipulator {
     private int maskSize;
+    private int sensitivity;
     
-    public FRManipulator(int maskSize){
+    public FRManipulator(int maskSize, int sensitivity){
         this.maskSize = maskSize;
+        this.sensitivity = sensitivity;
     }
 
     public int getMaskSize() {
@@ -22,8 +24,16 @@ public class FRManipulator {
     public void setMaskSize(int maskSize) {
         this.maskSize = maskSize;
     }
-    
-    public BufferedImage findEdges(BufferedImage src, int sensitivity){
+
+    public int getSensitivity() {
+        return sensitivity;
+    }
+
+    public void setSensitivity(int sensitivity) {
+        this.sensitivity = sensitivity;
+    }
+        
+    public BufferedImage findEdges(BufferedImage src){
         BufferedImage out;
         
         if(src != null) out = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -32,7 +42,7 @@ public class FRManipulator {
         for(int y = 0; y < src.getHeight(); y++){
             for(int x = 0; x < src.getWidth(); x++){
                 int value = calculatePixel(src, x, y);
-                out.setRGB(x, y, value>sensitivity ? Color.white.getRGB() : 0);
+                out.setRGB(x, y, value>this.sensitivity ? Color.white.getRGB() : 0);
             }
         }
         

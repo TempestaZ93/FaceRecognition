@@ -29,15 +29,13 @@ public class FRFrame extends JFrame{
     private FRManipulator manipulator;
     private Queue<BufferedImage> trippleBuffer;
     private boolean recording;
-    private int sensitivity;
     
     public FRFrame(String title, Dimension size, FRImageReceiver receiver){
         this.receiver = receiver;
         this.display = new FRDisplay(size);
-        this.manipulator = new FRManipulator(5);
+        this.manipulator = new FRManipulator(5, 50);
         this.trippleBuffer = new ArrayDeque<>(3);
         this.recording = true;
-        this.sensitivity = 50;
         
         JSlider sensitivitySlider = new JSlider(0, 255);
         sensitivitySlider.setPaintTicks(true);
@@ -46,9 +44,9 @@ public class FRFrame extends JFrame{
         sensitivitySlider.setMinorTickSpacing(32);
         sensitivitySlider.setExtent(2);
         sensitivitySlider.setComponentPopupMenu(new JPopupMenu("Threshold of the algorithm."));
-        sensitivitySlider.setValue(this.sensitivity);
+        sensitivitySlider.setValue(this.manipulator.getSensitivity());
         sensitivitySlider.addChangeListener((ChangeEvent e) -> {
-            this.sensitivity = sensitivitySlider.getValue();
+            this.manipulator.setSensitivity(sensitivitySlider.getValue());
         });
         
         JSlider maskSizeSlider = new JSlider(3, 15);
@@ -101,10 +99,10 @@ public class FRFrame extends JFrame{
     public final void record(){
         while(this.recording){
             if(this.trippleBuffer.size() < 3){
-                this.trippleBuffer.offer(this.manipulator.findEdges(this.receiver.getImage(), this.sensitivity));
+                this.trippleBuffer.offer(this.manipulator.findEdges(this.receiver.getImage()));
             }else{
                 this.display.setImage(trippleBuffer.poll());
-                this.trippleBuffer.offer(this.manipulator.findEdges(this.receiver.getImage(), this.sensitivity));
+                this.trippleBuffer.offer(this.manipulator.findEdges(this.receiver.getImage()));
                 this.display.repaint();
             }
         }
