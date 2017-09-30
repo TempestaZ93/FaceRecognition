@@ -1,7 +1,7 @@
 
 package de.philippgagel.facerecognition;
 
-import de.philippgagel.facerecognition.camerahandling.FRImageReceiver;
+import de.philippgagel.facerecognition.imagemanipulation.FRImageRenderer;
 import de.philippgagel.facerecognition.ui.FRFrame;
 import de.philippgagel.facerecognition.ui.listeners.FRInputListener;
 import java.awt.Dimension;
@@ -15,8 +15,8 @@ public class FRMain {
         Dimension size = new Dimension(640, 480);
         String title = "Webcam-Test";
         
-        FRImageReceiver receiver = new FRImageReceiver(size);
-        FRFrame frame = new FRFrame(title, size, receiver);
+        FRImageRenderer renderer = new FRImageRenderer();
+        FRFrame frame = new FRFrame(title, size, renderer);
         FRInputListener controller = new FRInputListener(frame);
         
         frame.addKeyListener(controller);

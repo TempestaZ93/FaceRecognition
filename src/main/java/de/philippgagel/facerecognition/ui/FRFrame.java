@@ -1,8 +1,7 @@
 
 package de.philippgagel.facerecognition.ui;
 
-import de.philippgagel.facerecognition.camerahandling.FRImageReceiver;
-import de.philippgagel.facerecognition.imagemanipulation.FRManipulator;
+import de.philippgagel.facerecognition.imagemanipulation.FRImageRenderer;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -12,9 +11,6 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
-import javax.swing.JPopupMenu;
-import javax.swing.JSlider;
-import javax.swing.event.ChangeEvent;
 
 /**
  *
@@ -25,19 +21,17 @@ public class FRFrame extends JFrame{
     private static final Logger LOG = Logger.getLogger(FRFrame.class.getName());
     
     private FRDisplay display;
-    private FRImageReceiver receiver;
-    private FRManipulator manipulator;
+    private FRImageRenderer renderer;
     private Queue<BufferedImage> trippleBuffer;
     private boolean recording;
     
-    public FRFrame(String title, Dimension size, FRImageReceiver receiver){
-        this.receiver = receiver;
+    public FRFrame(String title, Dimension size, FRImageRenderer renderer){
+        this.renderer = renderer;
         this.display = new FRDisplay(size);
-        this.manipulator = new FRManipulator(5, 50);
         this.trippleBuffer = new ArrayDeque<>(3);
         this.recording = true;
         
-        JSlider sensitivitySlider = new JSlider(0, 255);
+        /*JSlider sensitivitySlider = new JSlider(0, 255);
         sensitivitySlider.setPaintTicks(true);
         sensitivitySlider.setPaintLabels(true);
         sensitivitySlider.setMajorTickSpacing(64);
@@ -59,8 +53,8 @@ public class FRFrame extends JFrame{
         maskSizeSlider.setValue(this.manipulator.getMaskSize());
         maskSizeSlider.addChangeListener((ChangeEvent e) -> {
             this.manipulator.setMaskSize(maskSizeSlider.getValue());
-        });
-        
+        });*/ 
+       
         super.setTitle(title);
         super.setSize(size);
         super.setLocationRelativeTo(null);
@@ -77,11 +71,11 @@ public class FRFrame extends JFrame{
         gbc.weightx = .5;
         gbc.weighty = .1;
         
-        super.getContentPane().add(sensitivitySlider, gbc);
+        //super.getContentPane().add(sensitivitySlider, gbc);
 
         gbc.gridx = 1; 
         
-        super.getContentPane().add(maskSizeSlider, gbc);
+        //super.getContentPane().add(maskSizeSlider, gbc);
         
         gbc.gridx = 0;
         gbc.gridy = 1;
@@ -97,15 +91,22 @@ public class FRFrame extends JFrame{
     }
     
     public final void record(){
+        boolean fist = true;
         while(this.recording){
             if(this.trippleBuffer.size() < 3){
-                this.trippleBuffer.offer(this.manipulator.findEdges(this.receiver.getImage()));
+                this.trippleBuffer.offer(prepareImage());
+                
             }else{
                 this.display.setImage(trippleBuffer.poll());
-                this.trippleBuffer.offer(this.manipulator.findEdges(this.receiver.getImage()));
+                this.trippleBuffer.offer(prepareImage());
                 this.display.repaint();
             }
         }
+    }
+    
+    private BufferedImage prepareImage(){
+        //return this.manipulator.findEdges(this.manipulator.cancelNoise(this.renderer.getImage()));
+        return null;
     }
     
     public void setRecording(boolean recording){
