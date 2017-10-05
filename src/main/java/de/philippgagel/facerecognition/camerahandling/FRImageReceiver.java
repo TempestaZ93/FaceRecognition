@@ -1,4 +1,3 @@
-
 package de.philippgagel.facerecognition.camerahandling;
 
 import com.github.sarxos.webcam.Webcam;

@@ -1,4 +1,3 @@
-
 package de.philippgagel.facerecognition.imagemanipulation;
 
 import java.awt.Color;

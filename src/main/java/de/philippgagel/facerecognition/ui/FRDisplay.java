@@ -1,4 +1,3 @@
-
 package de.philippgagel.facerecognition.ui;
 
 import java.awt.Color;

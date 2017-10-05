@@ -1,4 +1,3 @@
-
 package de.philippgagel.facerecognition.ui;
 
 import de.philippgagel.facerecognition.imagemanipulation.FRImageRenderer;
