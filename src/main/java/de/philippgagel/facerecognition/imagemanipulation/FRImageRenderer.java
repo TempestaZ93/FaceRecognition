@@ -3,6 +3,7 @@ package de.philippgagel.facerecognition.imagemanipulation;
 import de.philippgagel.facerecognition.camerahandling.FRImageReceiver;
 import java.awt.image.BufferedImage;
 import java.util.ArrayDeque;
+import java.util.Observable;
 import java.util.Queue;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -10,7 +11,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @author Philipp Gagel
  */
-public class FRImageRenderer {
+public class FRImageRenderer extends Observable{
     private final FRImageManipulator manipulator;
     private final FRImageReceiver receiver;
     
@@ -28,16 +29,15 @@ public class FRImageRenderer {
     
     private volatile boolean running;
     
-    private volatile int queueSize = 10;
+    private volatile int queueSize = 5;
     
     public FRImageRenderer(){
         receiver = new FRImageReceiver();
-        manipulator = new FRImageManipulator(5, 50);
+        manipulator = new FRImageManipulator(5, 20);
         
         prepareQueues();
         prepareLocks();
         prepareThreads();
-        
     }
     
     private void prepareQueues(){
@@ -91,7 +91,7 @@ public class FRImageRenderer {
                 inputLock.unlock();
 
                 image = manipulator.cancelNoise(image);
-
+                
                 noiseLock.lock();
                 try {
                     if(noiseQueue.size()<queueSize)
@@ -115,7 +115,7 @@ public class FRImageRenderer {
                 noiseLock.unlock();
 
                 image = manipulator.findEdges(image);
-
+                
                 outputLock.lock();
                 try {
                     if(outputQueue.size()<queueSize)
