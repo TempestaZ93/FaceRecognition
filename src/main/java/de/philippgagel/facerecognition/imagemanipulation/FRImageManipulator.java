@@ -10,18 +10,19 @@ import java.util.Arrays;
  * @author Philipp Gagel
  */
 public class FRImageManipulator {
-    private int maskSize;
+    // sensitivity to operate with
     private int sensitivity;
 
+    // masks to apply to the images
     private int[][] maskHorizontal;
     private int[][] maskVertical;
     private int[][] maskDiagonal45;
     private int[][] maskDiagonal135;
     
     public FRImageManipulator(int maskSize, int sensitivity){
-        this.maskSize = maskSize;
         this.sensitivity = sensitivity;
         
+        // Initiate the arrays with the preffered values
         this.maskHorizontal = new int[][] {
             {0, 0, 0},
             {-4, 0, 4},
@@ -43,23 +44,28 @@ public class FRImageManipulator {
             {4, 0, 0},
         };
     }
-
-    public int getMaskSize() {
-        return maskSize;
-    }
-
-    public void setMaskSize(int maskSize) {
-        this.maskSize = maskSize;
-    }
-
+    
+    /**
+     * @returns the sensitivity used to determine edges
+     */
     public int getSensitivity() {
         return sensitivity;
     }
 
+    /**
+     * Sets the sensitivity used to determine edges
+     * @param sensitivity 
+     */
     public void setSensitivity(int sensitivity) {
         this.sensitivity = sensitivity;
     }
         
+    /**
+     * This method uses a directional color difference calculation to look for edges
+     * 
+     * @param src the image to look for edges
+     * @return the image containting only the found edges.
+     */
     public BufferedImage findEdges(BufferedImage src){
         BufferedImage out;
         
@@ -76,6 +82,12 @@ public class FRImageManipulator {
         return out;
     }
     
+    /**
+     * This image uses an adaptive median filter to cancel out noise in the image. 
+     * 
+     * @param src the image that has to undego noise cancelation 
+     * @return the image with less noise
+     */
     public BufferedImage cancelNoise(BufferedImage src){
         BufferedImage out;
         
@@ -93,8 +105,9 @@ public class FRImageManipulator {
         
         return out;
     }
-  
-      private int[] adaptiveMedian(BufferedImage img, int x, int y){
+    
+    // This method applies the adaptive median filter to on pixel at a time
+     private int[] adaptiveMedian(BufferedImage img, int x, int y){
         int startX, startY;
         int width, height;
         
@@ -128,6 +141,8 @@ public class FRImageManipulator {
         return null;
     }
     
+    // This method splits the colors encapsulated in the on dimensional array pixels into a 
+    // two-dimensional array with on array per color.
     private int[][] splitColors(int[] pixels, int pixelNum){
         int[][] splitColors = new int[3][pixelNum];
         int pixelCounter = 0;
@@ -141,7 +156,7 @@ public class FRImageManipulator {
         return splitColors;
     }
     
-    
+    // This method applies the cirectional color difference algorithm to one pixel at a time.
     private int[] calculatePixel(BufferedImage img, int x, int y){
         
         int startX, startY;
@@ -170,6 +185,7 @@ public class FRImageManipulator {
             
             for(int i = 0; i< 3; i++){
                 resColor[i] = Math.max(Math.max(Math.max(horizontal[i], vertical[i]), diagonal45[i]), diagonal135[i]) / 4;
+                resColor[i] = resColor[i] > this.sensitivity ? 255 : 0;
             }
             
             return resColor;
@@ -178,6 +194,7 @@ public class FRImageManipulator {
         return null;
     }
     
+    // This method creates a weighted pixel sum out of all pixels using the given mask.
     private int[] weightedPixelSum(int [] pixels, int width, int height, int[][] mask){
         int[] sums = new int[3];
         
