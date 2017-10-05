@@ -6,11 +6,15 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
+import javax.swing.JPopupMenu;
+import javax.swing.JSlider;
+import javax.swing.event.ChangeEvent;
 
 /**
  *
@@ -31,18 +35,24 @@ public class FRFrame extends JFrame{
         this.trippleBuffer = new ArrayDeque<>(3);
         this.recording = true;
         
-        /*JSlider sensitivitySlider = new JSlider(0, 255);
+        super.addWindowStateListener((WindowEvent e) -> {
+            if(e.getID() == WindowEvent.WINDOW_CLOSED){
+                renderer.stop();
+            }
+        });
+        
+        JSlider sensitivitySlider = new JSlider(0, 255);
         sensitivitySlider.setPaintTicks(true);
         sensitivitySlider.setPaintLabels(true);
         sensitivitySlider.setMajorTickSpacing(64);
         sensitivitySlider.setMinorTickSpacing(32);
         sensitivitySlider.setExtent(2);
         sensitivitySlider.setComponentPopupMenu(new JPopupMenu("Threshold of the algorithm."));
-        sensitivitySlider.setValue(this.manipulator.getSensitivity());
+        sensitivitySlider.setValue(this.renderer.getSensitivity());
         sensitivitySlider.addChangeListener((ChangeEvent e) -> {
-            this.manipulator.setSensitivity(sensitivitySlider.getValue());
+            this.renderer.setSensitivity(sensitivitySlider.getValue());
         });
-        
+        /*
         JSlider maskSizeSlider = new JSlider(3, 15);
         maskSizeSlider.setPaintTicks(true);
         maskSizeSlider.setPaintLabels(true);
@@ -71,7 +81,7 @@ public class FRFrame extends JFrame{
         gbc.weightx = .5;
         gbc.weighty = .1;
         
-        //super.getContentPane().add(sensitivitySlider, gbc);
+        super.getContentPane().add(sensitivitySlider, gbc);
 
         gbc.gridx = 1; 
         
@@ -93,21 +103,19 @@ public class FRFrame extends JFrame{
     public final void record(){
         boolean fist = true;
         while(this.recording){
-            if(this.trippleBuffer.size() < 3){
-                this.trippleBuffer.offer(prepareImage());
-                
-            }else{
-                this.display.setImage(trippleBuffer.poll());
-                this.trippleBuffer.offer(prepareImage());
-                this.display.repaint();
+            if(this.renderer.isNewImageAvailable()){
+                if(this.trippleBuffer.size() < 3){
+                    this.trippleBuffer.offer(this.renderer.getImage());
+
+                }else{
+                    this.display.setImage(trippleBuffer.poll());
+                    this.trippleBuffer.offer(this.renderer.getImage());
+                    this.display.repaint();
+                }
             }
         }
     }
     
-    private BufferedImage prepareImage(){
-        //return this.manipulator.findEdges(this.manipulator.cancelNoise(this.renderer.getImage()));
-        return null;
-    }
     
     public void setRecording(boolean recording){
         if(recording && !this.recording){
