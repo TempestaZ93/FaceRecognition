@@ -6,9 +6,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
-import java.util.ArrayDeque;
-import java.util.Queue;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JPopupMenu;
@@ -25,13 +22,15 @@ public class FRFrame extends JFrame{
     
     private FRDisplay display;
     private FRImageRenderer renderer;
-    private Queue<BufferedImage> trippleBuffer;
     private boolean recording;
+    
+    private final int sliderStart = 5;
+    private final int sliderEnd = 50;
+    private final int sliderTicks = 5;
     
     public FRFrame(String title, Dimension size, FRImageRenderer renderer){
         this.renderer = renderer;
         this.display = new FRDisplay(size);
-        this.trippleBuffer = new ArrayDeque<>(3);
         this.recording = true;
         
         super.addWindowStateListener((WindowEvent e) -> {
@@ -40,11 +39,10 @@ public class FRFrame extends JFrame{
             }
         });
         
-        JSlider sensitivitySlider = new JSlider(0, 255);
+        JSlider sensitivitySlider = new JSlider(sliderStart, sliderEnd);
         sensitivitySlider.setPaintTicks(true);
         sensitivitySlider.setPaintLabels(true);
-        sensitivitySlider.setMajorTickSpacing(64);
-        sensitivitySlider.setMinorTickSpacing(32);
+        sensitivitySlider.setMajorTickSpacing(sliderTicks);
         sensitivitySlider.setExtent(2);
         sensitivitySlider.setComponentPopupMenu(new JPopupMenu("Threshold of the algorithm."));
         sensitivitySlider.setValue(this.renderer.getSensitivity());
@@ -100,17 +98,10 @@ public class FRFrame extends JFrame{
     }
     
     public final void record(){
-        boolean fist = true;
         while(this.recording){
             if(this.renderer.isNewImageAvailable()){
-                if(this.trippleBuffer.size() < 3){
-                    this.trippleBuffer.offer(this.renderer.getImage());
-
-                }else{
-                    this.display.setImage(trippleBuffer.poll());
-                    this.trippleBuffer.offer(this.renderer.getImage());
-                    this.display.repaint();
-                }
+                this.display.setImage(this.renderer.getImage());
+                this.display.repaint();
             }
         }
     }
