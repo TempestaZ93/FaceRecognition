@@ -1,4 +1,4 @@
-package de.philippgagel.facerecognition.imagemanipulation;
+    package de.philippgagel.facerecognition.imagemanipulation;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -13,34 +13,35 @@ public class FRImageManipulator {
     private int sensitivity;
 
     // masks to apply to the images
-    private int[][] maskHorizontal;
-    private int[][] maskVertical;
-    private int[][] maskDiagonal45;
-    private int[][] maskDiagonal135;
+    private int[][][] masks;
+    private int weight;
     
     public FRImageManipulator(int maskSize, int sensitivity){
         this.sensitivity = sensitivity;
         
+        weight = 4;
+        masks = new int[4][3][3];
+        
         // Initiate the arrays with the preffered values
-        this.maskHorizontal = new int[][] {
+        this.masks[0] = new int[][] {
             {0, 0, 0},
-            {-4, 0, 4},
+            {-weight, 0, weight},
             {0, 0, 0},
         };
-        this.maskVertical = new int[][] {
-            {0, 4, 0},
+        this.masks[1] = new int[][] {
+            {0, weight, 0},
             {0, 0, 0},
-            {0, -4, 0},
+            {0, -weight, 0},
         };
-        this.maskDiagonal45 = new int[][] {
-            {4, 0, 0},
+        this.masks[2] = new int[][] {
+            {weight, 0, 0},
             {0, 0, 0},
-            {0, 0, -4},
+            {0, 0, -weight},
         };
-        this.maskDiagonal135 = new int[][] {
-            {0, 0, -4},
+        this.masks[3] = new int[][] {
+            {0, 0, -weight},
             {0, 0, 0},
-            {4, 0, 0},
+            {weight, 0, 0},
         };
     }
     
@@ -48,7 +49,7 @@ public class FRImageManipulator {
      * @returns the sensitivity used to determine edges
      */
     public int getSensitivity() {
-        return sensitivity;
+        return sensitivity / weight;
     }
 
     /**
@@ -56,7 +57,7 @@ public class FRImageManipulator {
      * @param sensitivity 
      */
     public void setSensitivity(int sensitivity) {
-        this.sensitivity = sensitivity;
+        this.sensitivity = sensitivity * weight;
     }
         
     /**
@@ -73,8 +74,8 @@ public class FRImageManipulator {
         
         for(int y = 0; y < src.getHeight(); y++){
             for(int x = 0; x < src.getWidth(); x++){
-                int[] resColor = calculatePixel(src, x, y);
-                if(resColor!=null) out.setRGB(x, y, new Color(resColor[0], resColor[1], resColor[2]).getRGB());
+                int[] resColor = edgeTest(src, x, y);
+                if(resColor!=null) out.setRGB(x, y, (resColor[0]<<16)  | (resColor[1]<<8)  | resColor[2]);
             }
         }
         
@@ -97,7 +98,7 @@ public class FRImageManipulator {
             for(int x = 0; x < src.getWidth(); x++){
                 int[] resColor = adaptiveMedian(src, x, y);
                 
-                if(resColor != null) out.setRGB(x, y, new Color(resColor[0], resColor[1], resColor[2]).getRGB());
+                if(resColor != null) out.setRGB(x, y, (resColor[0]<<16)  | (resColor[1]<<8)  | resColor[2]);
                 else out.setRGB(x, y, Color.white.getRGB());
             }
         }
@@ -110,83 +111,112 @@ public class FRImageManipulator {
         int startX, startY;
         int width, height;
         
+        // calculate start coordinates for the 
         startX = x - (3 << 1);
         startY = y - (3 << 1);
         
+        // is the start is less than 0 set it to 0
         startX = startX < 0 ? 0 : startX;
         startY = startY < 0 ? 0 : startY;
         
+        // calculate width and height
         width = startX + 3 >= img.getWidth() ? img.getWidth() - startX : 3;
         height = startY + 3 >= img.getHeight() ? img.getHeight() - startY : 3;
         
+        // if width or height are positive start calculation
         if(width > 0 && height > 0){
             int[] pixels = new int[width * height * 3];
             int[] resColor = new int[3];
         
             img.getRaster().getPixels(startX, startY, width, height, pixels);
         
-            int[][] splitPixels = splitColors(pixels, width*height);
-            
+            // Split the pixels into the different color channels
+            int[][] splitPixels = new int[3][width*height];
+            int pixelCounter = 0;
+        
+            for(int i = 0; i< pixels.length; pixelCounter++){
+                splitPixels[0][pixelCounter] = pixels[i++];
+                splitPixels[1][pixelCounter] = pixels[i++];
+                splitPixels[2][pixelCounter] = pixels[i++];
+            }
+        
+            // sort each color channel
             Arrays.sort(splitPixels[0]);
             Arrays.sort(splitPixels[1]);
             Arrays.sort(splitPixels[2]);
             
-            resColor[0] = splitPixels[0][width*height/2];
-            resColor[1] = splitPixels[1][width*height/2];
-            resColor[2] = splitPixels[2][width*height/2];
+            // get the median of each color channel
+            int medIndex = width*height/2;
+            resColor[0] = splitPixels[0][medIndex];
+            resColor[1] = splitPixels[1][medIndex];
+            resColor[2] = splitPixels[2][medIndex];
             
             return resColor;
         }
         return null;
     }
     
-    // This method splits the colors encapsulated in the on dimensional array pixels into a 
-    // two-dimensional array with on array per color.
-    private int[][] splitColors(int[] pixels, int pixelNum){
-        int[][] splitColors = new int[3][pixelNum];
-        int pixelCounter = 0;
-        
-        for(int i = 0; i< pixels.length; pixelCounter++){
-            splitColors[0][pixelCounter] = pixels[i++];
-            splitColors[1][pixelCounter] = pixels[i++];
-            splitColors[2][pixelCounter] = pixels[i++];
-        }
-        
-        return splitColors;
-    }
-    
     // This method applies the cirectional color difference algorithm to one pixel at a time.
-    private int[] calculatePixel(BufferedImage img, int x, int y){
+    private int[] edgeTest(BufferedImage img, int x, int y){
         
         int startX, startY;
         int width, height;
         
-        startX = x - (3 << 1);
-        startY = y - (3 << 1);
+        // calculate start coordinates
+        startX = x - (3 / 2);
+        startY = y - (3 / 2);
         
+        // if the coordinates are less than 0 set it to 0
         startX = startX < 0 ? 0 : startX;
         startY = startY < 0 ? 0 : startY;
         
+        // calculate the width and heigth
         width = startX + 3 >= img.getWidth() ? img.getWidth() - startX : 3;
         height = startY + 3 >= img.getHeight() ? img.getHeight() - startY : 3;
         
-        
+        // If width and height are positive start the calculation
         if(width > 0 && height > 0){
             int[] pixels = new int[width * height * 3];
             int[] resColor = new int[3];
             
             img.getRaster().getPixels(startX, startY, width, height, pixels);
             
-            int[] horizontal = weightedPixelSum(pixels, width, height, this.maskHorizontal);
-            int[] vertical = weightedPixelSum(pixels, width, height, this.maskVertical);
-            int[] diagonal45 = weightedPixelSum(pixels, width, height, this.maskDiagonal45);
-            int[] diagonal135 = weightedPixelSum(pixels, width, height, this.maskDiagonal135);
+            // calculate pixel sums
+            int[][] pixelSums = new int[4][3];
             
-            for(int i = 0; i< 3; i++){
-                resColor[i] = Math.max(Math.max(Math.max(horizontal[i], vertical[i]), diagonal45[i]), diagonal135[i]) / 4;
-                resColor[i] = resColor[i] > this.sensitivity ? 255 : 0;
+             for (int[] sum : pixelSums)
+                for(int su : sum)
+                    su = 0;
+        
+            int[][] mask;
+            int[] sum;
+            for (int i = 0; i< masks.length; i++) {
+                mask = masks[i];
+                sum = pixelSums[i];
+                for (int localY = 0; localY < height; localY++) {
+                    for (int localX = 0; localX < width; localX++) {
+                        int index = localX*3 + localY*width;
+                        int maskValue = mask[localX][localY];
+                        if(maskValue == 0) continue;
+                        sum[0] += pixels[index] * maskValue;
+                        sum[1] += pixels[index + 1] * maskValue;
+                        sum[2] += pixels[index + 2] * maskValue;
+                    }
+                }
             }
             
+            for(int i = 0; i< 3; i++){
+                resColor[i] = Math.max(Math.max(Math.max(pixelSums[0][i], pixelSums[1][i]), pixelSums[2][i]), pixelSums[3][i]);
+            }
+            
+            int max = Math.max(Math.max(resColor[0], resColor[1]), resColor[2]);
+            
+            if(max > this.sensitivity){
+                Arrays.fill(resColor, max);
+            }else{
+                Arrays.fill(resColor, 0);
+            }
+                        
             return resColor;
         }
         
@@ -194,25 +224,28 @@ public class FRImageManipulator {
     }
     
     // This method creates a weighted pixel sum out of all pixels using the given mask.
-    private int[] weightedPixelSum(int [] pixels, int width, int height, int[][] mask){
-        int[] sums = new int[3];
+    private int[][] weightedPixelSum(int [] pixels, int width, int height){
+        int[][] sums = new int[4][3];
         
-        sums[0] = 0;
-        sums[1] = 0;
-        sums[2] = 0;
+        for (int[] sum : sums)
+            for(int su : sum)
+                su = 0;
         
-        for(int y = 0; y < height; y++){
-            for(int x = 0; x < width; x++){
-                sums[0] += pixels[x*3 + y*width] * mask[x][y];
-                sums[1] += pixels[x*3 + y*width*3 + 1] * mask[x][y];
-                sums[2] += pixels[x*3 + y*width*3 + 2] * mask[x][y];
+        int[][] mask;
+        int[] sum;
+        for (int i = 0; i< masks.length; i++) {
+            mask = masks[i];
+            sum = sums[i];
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int index = x*3 + y*width;
+                    sum[0] += pixels[index] * mask[x][y];
+                    sum[1] += pixels[index + 1] * mask[x][y];
+                    sum[2] += pixels[index + 2] * mask[x][y];
+                }
             }
         }
-                
-        sums[0] = Math.abs(sums[0]);
-        sums[1] = Math.abs(sums[1]);
-        sums[2] = Math.abs(sums[2]);
-        
+            
         return sums;
     }
 }
