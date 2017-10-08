@@ -1,5 +1,6 @@
 package de.philippgagel.facerecognition.ui;
 
+import de.philippgagel.facerecognition.camerahandling.FRImageReceiver;
 import de.philippgagel.facerecognition.imagemanipulation.FRImageRenderer;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -10,6 +11,7 @@ import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JPopupMenu;
 import javax.swing.JSlider;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 
 /**
@@ -49,6 +51,17 @@ public class FRFrame extends JFrame{
         sensitivitySlider.addChangeListener((ChangeEvent e) -> {
             this.renderer.setSensitivity(sensitivitySlider.getValue());
         });
+        
+        
+        String[] cams = new String[FRImageReceiver.getInstance().getWebcams().size()];
+        FRImageReceiver.getInstance().getWebcams().toArray(cams);
+        javax.swing.JList<String> camSelector = new javax.swing.JList<>(cams);
+        camSelector.setDragEnabled(false);
+        camSelector.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        camSelector.setSelectedIndex(cams.length-1);
+        camSelector.addListSelectionListener(e ->{
+            FRImageReceiver.getInstance().setWebcam(cams[e.getFirstIndex()]);
+        });
         /*
         JSlider maskSizeSlider = new JSlider(3, 15);
         maskSizeSlider.setPaintTicks(true);
@@ -74,15 +87,15 @@ public class FRFrame extends JFrame{
         gbc.gridx = 0; 
         gbc.gridy = 0;
         gbc.insets = new Insets(5,5,5,5);
-        gbc.weightx = .5;
-        gbc.weightx = .5;
+        gbc.weightx = .8;
         gbc.weighty = .1;
         
         super.getContentPane().add(sensitivitySlider, gbc);
 
         gbc.gridx = 1; 
+        gbc.weightx = .2;
         
-        //super.getContentPane().add(maskSizeSlider, gbc);
+        super.getContentPane().add(camSelector, gbc);
         
         gbc.gridx = 0;
         gbc.gridy = 1;
