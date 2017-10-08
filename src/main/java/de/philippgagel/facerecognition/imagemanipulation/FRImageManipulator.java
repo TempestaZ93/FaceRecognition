@@ -1,4 +1,4 @@
-    package de.philippgagel.facerecognition.imagemanipulation;
+package de.philippgagel.facerecognition.imagemanipulation;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;

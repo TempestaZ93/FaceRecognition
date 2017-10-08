@@ -1,6 +1,7 @@
 package de.philippgagel.facerecognition.imagemanipulation;
 
 import de.philippgagel.facerecognition.camerahandling.FRImageReceiver;
+import de.philippgagel.facerecognition.camerahandling.WebcamNotFoundException;
 import java.awt.image.BufferedImage;
 import java.util.ArrayDeque;
 import java.util.List;
@@ -34,7 +35,7 @@ public class FRImageRenderer extends Observable{
     
     private volatile int queueSize = 5;
     
-    public FRImageRenderer(){
+    public FRImageRenderer() throws WebcamNotFoundException {
         receiver = FRImageReceiver.getInstance();
         manipulator = new FRImageManipulator(5, 20);
         
