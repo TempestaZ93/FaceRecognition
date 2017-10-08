@@ -3,7 +3,6 @@ package de.philippgagel.facerecognition.imagemanipulation;
 import de.philippgagel.facerecognition.camerahandling.FRImageReceiver;
 import java.awt.image.BufferedImage;
 import java.util.ArrayDeque;
-import java.util.List;
 import java.util.Observable;
 import java.util.Queue;
 import java.util.concurrent.locks.ReentrantLock;
@@ -20,8 +19,6 @@ public class FRImageRenderer extends Observable{
     private Thread noiseCancelationThread;
     private Thread edgeDetectionThread;
     
-    private List<BufferedImage> inputList;
-    
     private Queue<BufferedImage> inputQueue;
     private Queue<BufferedImage> noiseQueue;
     private Queue<BufferedImage> outputQueue;
@@ -36,7 +33,7 @@ public class FRImageRenderer extends Observable{
     
     public FRImageRenderer(){
         receiver = FRImageReceiver.getInstance();
-        manipulator = new FRImageManipulator(5, 20);
+        manipulator = new FRImageManipulator(5, 20, true);
         
         prepareQueues();
         prepareLocks();

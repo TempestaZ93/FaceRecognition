@@ -2,7 +2,9 @@
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -15,12 +17,16 @@ public class FRImageManipulator {
     // masks to apply to the images
     private int[][][] masks;
     private int weight;
+    boolean backgrounsSubtraction;
     
-    public FRImageManipulator(int maskSize, int sensitivity){
+    private List<BufferedImage> inputList;
+    
+    public FRImageManipulator(int maskSize, int sensitivity, boolean backgroundSubtraction){
         this.sensitivity = sensitivity;
-        
+        this.backgrounsSubtraction = backgroundSubtraction;
         weight = 4;
         masks = new int[4][3][3];
+        inputList = new ArrayList<>(3);
         
         // Initiate the arrays with the preffered values
         this.masks[0] = new int[][] {
@@ -71,12 +77,28 @@ public class FRImageManipulator {
         
         if(src != null) out = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_RGB);
         else return new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+
+        int[] pixels = new int[src.getWidth() * src.getHeight() * 3];
+        
+        src.getRaster().getPixels(0, 0, src.getWidth(), src.getHeight(), pixels);
         
         for(int y = 0; y < src.getHeight(); y++){
             for(int x = 0; x < src.getWidth(); x++){
+                if(inputList.size() == 3){
+                    if(roughlyEquals(inputList.get(0).getRGB(x, y), src.getRGB(x, y), 0.05f)){
+                        continue;
+                    }
+                }
                 int[] resColor = edgeTest(src, x, y);
                 if(resColor!=null) out.setRGB(x, y, (resColor[0]<<16)  | (resColor[1]<<8)  | resColor[2]);
             }
+        }
+        
+        if(inputList.size() != 3){
+            inputList.add(inputList.size(), src);
+        }else{
+            inputList.remove(0);
+            inputList.add(2, src);
         }
         
         return out;
@@ -223,29 +245,25 @@ public class FRImageManipulator {
         return null;
     }
     
-    // This method creates a weighted pixel sum out of all pixels using the given mask.
-    private int[][] weightedPixelSum(int [] pixels, int width, int height){
-        int[][] sums = new int[4][3];
+    private boolean roughlyEquals(int rgb1, int rgb2, float percentageDiff){        
+        int r1, g1, b1;
+        int r2, g2, b2;
         
-        for (int[] sum : sums)
-            for(int su : sum)
-                su = 0;
+        r1 = rgb1 >> 16 | 255;
+        g1 = rgb1 >> 8 | 255;
+        b1 = rgb1 | 255;
         
-        int[][] mask;
-        int[] sum;
-        for (int i = 0; i< masks.length; i++) {
-            mask = masks[i];
-            sum = sums[i];
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int index = x*3 + y*width;
-                    sum[0] += pixels[index] * mask[x][y];
-                    sum[1] += pixels[index + 1] * mask[x][y];
-                    sum[2] += pixels[index + 2] * mask[x][y];
-                }
-            }
-        }
+        r2 = rgb2 >> 16 | 255;
+        g2 = rgb2 >> 8 | 255;
+        b2 = rgb2 | 255;
+    
+        if( Math.abs(r1-r2)>percentageDiff*r2 && 
+            Math.abs(b1-b2)>percentageDiff*b2 && 
+            Math.abs(g1-g2)>percentageDiff*g2){
             
-        return sums;
+            return true;
+        }
+        
+        return false;
     }
 }
