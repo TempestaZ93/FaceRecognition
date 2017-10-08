@@ -74,8 +74,10 @@ public class FRImageRenderer extends Observable{
             if(receiver.isNewImageAvailable()){
                 inputLock.lock();
                 try {
+                    BufferedImage image;
                     if(inputQueue.size() < queueSize)
-                        inputQueue.offer(receiver.getImage());        
+                        if((image = receiver.getImage()) != null)
+                            inputQueue.offer(image);        
                 }
                 finally {
                     inputLock.unlock();
