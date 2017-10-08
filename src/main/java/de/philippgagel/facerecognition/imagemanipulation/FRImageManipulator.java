@@ -20,6 +20,8 @@ public class FRImageManipulator {
     boolean backgrounsSubtraction;
     
     private List<BufferedImage> inputList;
+    private BufferedImage lastImage;
+    
     
     public FRImageManipulator(int maskSize, int sensitivity, boolean backgroundSubtraction){
         this.sensitivity = sensitivity;
@@ -84,11 +86,15 @@ public class FRImageManipulator {
         
         for(int y = 0; y < src.getHeight(); y++){
             for(int x = 0; x < src.getWidth(); x++){
+                
                 if(inputList.size() == 3){
-                    if(roughlyEquals(inputList.get(0).getRGB(x, y), src.getRGB(x, y), 0.05f)){
-                        continue;
-                    }
+                    if(lastImage != null)
+                        if(roughlyEquals(inputList.get(0).getRGB(x, y),  src.getRGB(x, y), .05f)){
+                            out.setRGB(x, y, lastImage.getRGB(x, y));
+                            continue;
+                        }
                 }
+                
                 int[] resColor = edgeTest(src, x, y);
                 if(resColor!=null) out.setRGB(x, y, (resColor[0]<<16)  | (resColor[1]<<8)  | resColor[2]);
             }
@@ -100,6 +106,8 @@ public class FRImageManipulator {
             inputList.remove(0);
             inputList.add(2, src);
         }
+        
+        lastImage = out;
         
         return out;
     }
@@ -249,21 +257,17 @@ public class FRImageManipulator {
         int r1, g1, b1;
         int r2, g2, b2;
         
-        r1 = rgb1 >> 16 | 255;
-        g1 = rgb1 >> 8 | 255;
-        b1 = rgb1 | 255;
+        r1 = rgb1 >> 16 & 255;
+        g1 = rgb1 >> 8 & 255;
+        b1 = rgb1 & 255;
         
-        r2 = rgb2 >> 16 | 255;
-        g2 = rgb2 >> 8 | 255;
-        b2 = rgb2 | 255;
+        r2 = rgb2 >> 16 & 255;
+        g2 = rgb2 >> 8 & 255;
+        b2 = rgb2 & 255;
     
-        if( Math.abs(r1-r2)>percentageDiff*r2 && 
-            Math.abs(b1-b2)>percentageDiff*b2 && 
-            Math.abs(g1-g2)>percentageDiff*g2){
-            
-            return true;
-        }
         
-        return false;
+        return Math.abs(r1-r2)>percentageDiff*r1 && 
+                Math.abs(b1-b2)>percentageDiff*b1 &&
+                Math.abs(g1-g2)>percentageDiff*g1;
     }
 }
