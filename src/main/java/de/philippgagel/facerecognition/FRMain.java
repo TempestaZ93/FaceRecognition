@@ -21,7 +21,7 @@ public class FRMain {
         try {
             FRImageReceiver.getInstance();
             FRImageRenderer renderer = new FRImageRenderer();
-            FRFrame frame = new FRFrame(title, size, 15, renderer);
+            FRFrame frame = new FRFrame(title, size, 5, renderer);
             FRInputListener controller = new FRInputListener(frame);
 
             frame.addKeyListener(controller);
