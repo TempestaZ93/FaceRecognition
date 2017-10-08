@@ -26,15 +26,17 @@ public class FRFrame extends JFrame{
     private FRDisplay display;
     private FRImageRenderer renderer;
     private boolean recording;
+    private int fps;
     
     private final int sliderStart = 5;
     private final int sliderEnd = 50;
     private final int sliderTicks = 5;
     
-    public FRFrame(String title, Dimension size, FRImageRenderer renderer) throws WebcamNotFoundException{
+    public FRFrame(String title, Dimension size, int fps,FRImageRenderer renderer) throws WebcamNotFoundException{
         this.renderer = renderer;
         this.display = new FRDisplay(size);
         this.recording = true;
+        this.fps = fps;
         
         super.addWindowStateListener((WindowEvent e) -> {
             if(e.getID() == WindowEvent.WINDOW_CLOSED){
@@ -103,14 +105,19 @@ public class FRFrame extends JFrame{
     }
     
     public final void record(){
+        long lastAskedTime = System.currentTimeMillis();
+        int timebetweenFrames = (int)(1f/fps * 1000);
+        
         while(this.recording){
             if(this.renderer.isNewImageAvailable()){
-                this.display.setImage(this.renderer.getImage());
-                this.display.repaint();
+                if(System.currentTimeMillis() > lastAskedTime + timebetweenFrames){
+                    this.display.setImage(this.renderer.getImage());
+                    this.display.repaint();
+                    lastAskedTime = System.currentTimeMillis();
+                }
             }
         }
     }
-    
     
     public void setRecording(boolean recording){
         if(recording && !this.recording){

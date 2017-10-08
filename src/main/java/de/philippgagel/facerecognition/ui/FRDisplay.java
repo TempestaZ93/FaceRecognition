@@ -32,10 +32,10 @@ public class FRDisplay extends JPanel{
         if(image != null) g.drawImage(this.image, 0, 0, this.getWidth(), this.getHeight(), null);
         
         char[] fps = Integer.toString(calcFPS()).toCharArray();
-        g.setColor(Color.red);
-        g.setFont(new Font("Times New Roman", Font.BOLD, 25));
-        g.drawChars(fps, 0, fps.length, 30, 30);
-        
+        g.setColor(Color.blue);
+        g.setFont(new Font("Arial Black", Font.BOLD, 25));
+        g.drawChars(fps, 0, fps.length, 30, 30); 
+       
     }
     
     private int calcFPS(){
