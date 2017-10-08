@@ -16,6 +16,10 @@ import java.util.stream.Collectors;
  */
 public class FRImageReceiver {
     private static final Logger LOG = Logger.getLogger(FRImageReceiver.class.getName());
+
+    public static void getIstance() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
     // Webcam object to receive the iamges
     private Webcam activeWebcam;
@@ -30,8 +34,12 @@ public class FRImageReceiver {
      * Creates an ImageReceiver with the highest possible resolution for the default webcam 
      * of the system
      */
-    private FRImageReceiver(){
+    private FRImageReceiver() throws WebcamNotFoundException{
         activeWebcam = Webcam.getDefault();
+        
+        if(activeWebcam == null){
+            throw new WebcamNotFoundException();
+        }
         
         Dimension[] viewSizes = activeWebcam.getViewSizes();
         int viewSizeNum = viewSizes.length;
@@ -81,7 +89,7 @@ public class FRImageReceiver {
         return this.activeWebcam.getName();
     }
     
-    public static FRImageReceiver getInstance(){
+    public static FRImageReceiver getInstance() throws WebcamNotFoundException{
         if(instance == null){
             instance = new FRImageReceiver();
         }

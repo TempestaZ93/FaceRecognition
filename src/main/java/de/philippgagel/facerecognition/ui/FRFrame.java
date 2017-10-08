@@ -1,6 +1,7 @@
 package de.philippgagel.facerecognition.ui;
 
 import de.philippgagel.facerecognition.camerahandling.FRImageReceiver;
+import de.philippgagel.facerecognition.camerahandling.WebcamNotFoundException;
 import de.philippgagel.facerecognition.imagemanipulation.FRImageRenderer;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -25,21 +26,26 @@ public class FRFrame extends JFrame{
     private FRDisplay display;
     private FRImageRenderer renderer;
     private boolean recording;
+    private int fps;
     
     private final int sliderStart = 5;
     private final int sliderEnd = 50;
     private final int sliderTicks = 5;
     
-    public FRFrame(String title, Dimension size, FRImageRenderer renderer){
+    public FRFrame(String title, Dimension size, int fps,FRImageRenderer renderer) throws WebcamNotFoundException{
         this.renderer = renderer;
         this.display = new FRDisplay(size);
         this.recording = true;
+        this.fps = fps;
         
         super.addWindowStateListener((WindowEvent e) -> {
             if(e.getID() == WindowEvent.WINDOW_CLOSED){
                 renderer.stop();
             }
         });
+        
+        FRImageReceiver receiver;
+        receiver = FRImageReceiver.getInstance();
         
         JSlider sensitivitySlider = new JSlider(sliderStart, sliderEnd);
         sensitivitySlider.setPaintTicks(true);
@@ -53,27 +59,15 @@ public class FRFrame extends JFrame{
         });
         
         
-        String[] cams = new String[FRImageReceiver.getInstance().getWebcams().size()];
-        FRImageReceiver.getInstance().getWebcams().toArray(cams);
+        String[] cams = new String[receiver.getWebcams().size()];
+        receiver.getWebcams().toArray(cams);
         javax.swing.JList<String> camSelector = new javax.swing.JList<>(cams);
         camSelector.setDragEnabled(false);
         camSelector.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         camSelector.setSelectedIndex(cams.length-1);
         camSelector.addListSelectionListener(e ->{
-            FRImageReceiver.getInstance().setWebcam(cams[e.getFirstIndex()]);
+            receiver.setWebcam(cams[e.getFirstIndex()]);
         });
-        /*
-        JSlider maskSizeSlider = new JSlider(3, 15);
-        maskSizeSlider.setPaintTicks(true);
-        maskSizeSlider.setPaintLabels(true);
-        maskSizeSlider.setSnapToTicks(true);
-        maskSizeSlider.setMajorTickSpacing(2);
-        maskSizeSlider.setExtent(1);
-        maskSizeSlider.setComponentPopupMenu(new JPopupMenu("Size of the mask used to find the edges."));
-        maskSizeSlider.setValue(this.manipulator.getMaskSize());
-        maskSizeSlider.addChangeListener((ChangeEvent e) -> {
-            this.manipulator.setMaskSize(maskSizeSlider.getValue());
-        });*/ 
        
         super.setTitle(title);
         super.setSize(size);
@@ -111,14 +105,19 @@ public class FRFrame extends JFrame{
     }
     
     public final void record(){
+        long lastAskedTime = System.currentTimeMillis();
+        int timebetweenFrames = (int)(1f/fps * 1000);
+        
         while(this.recording){
             if(this.renderer.isNewImageAvailable()){
-                this.display.setImage(this.renderer.getImage());
-                this.display.repaint();
+                if(System.currentTimeMillis() > lastAskedTime + timebetweenFrames){
+                    this.display.setImage(this.renderer.getImage());
+                    this.display.repaint();
+                    lastAskedTime = System.currentTimeMillis();
+                }
             }
         }
     }
-    
     
     public void setRecording(boolean recording){
         if(recording && !this.recording){
